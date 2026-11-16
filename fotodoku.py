@@ -287,21 +287,37 @@ def main():
 PHONE_HTML = r"""<!doctype html><html lang=en><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>fotodoku</title>
 <style>
-body{font-family:system-ui,sans-serif;margin:0;padding:16px;background:#111;color:#eee}
-h2{margin:0 0 4px}small{color:#999;word-break:break-all}
-label.l{display:block;margin:16px 0 6px;font-weight:600}
-input,textarea{width:100%;box-sizing:border-box;font-size:18px;padding:12px;border-radius:8px;border:1px solid #444;background:#222;color:#eee}
-textarea{min-height:110px;font-family:inherit}
-.row{display:flex;gap:8px;margin-top:16px}
-.btn{flex:1;display:block;text-align:center;padding:16px;border-radius:8px;border:0;font-size:18px;font-weight:600;background:#357;color:#fff}
-.go{background:#2a6;width:100%;margin-top:12px}.go:disabled{background:#444}
-#prev{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}#prev img{height:80px;border-radius:6px}
-#log div{padding:6px 0;border-bottom:1px solid #333;font-size:15px}
-#chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}#chips:empty{display:none}
-#chips button{font-size:16px;padding:10px 14px;border-radius:20px;border:1px solid #357;background:#222;color:#eee}
-#chips button.on{background:#357;color:#fff}
+:root{--bg:#1a0d2e;--bg-dark:rgb(20 9 37/.82);--bg-light:#2d1b4e;--sel:#543a6e;--text:#fef6ff;
+--quiet:#8b9aff;--mid:#d9d1e5;--accent:#ff6ec7;--accent-2:#5ffbf1;--line:#3a2560;--line-strong:#543a6e;
+--font:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--text);font-family:var(--font);line-height:1.6;-webkit-font-smoothing:antialiased;
+background:radial-gradient(ellipse 80% 45% at 15% -5%,rgb(255 110 199/.22),transparent 70%),
+radial-gradient(ellipse 70% 40% at 90% 0%,rgb(95 251 241/.12),transparent 70%),
+radial-gradient(ellipse 90% 50% at 50% 110%,rgb(139 154 255/.14),transparent 70%),var(--bg);background-attachment:fixed}
+::selection{background:var(--sel)}
+.brand{font-weight:700;font-size:1.05rem;color:var(--text)}
+.brand .cur{display:inline-block;width:.55em;height:1.05em;background:var(--accent);vertical-align:-.15em;margin-left:.15em;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}@media (prefers-reduced-motion:reduce){.brand .cur{animation:none}}
+.label,label.l{font-size:.7rem;text-transform:uppercase;letter-spacing:.14em;color:var(--quiet)}
+.muted,small{color:var(--quiet)}
+input,textarea{width:100%;font:inherit;padding:12px;border-radius:0;border:1px solid var(--line-strong);background:var(--bg-dark);color:var(--text)}
+input:focus,textarea:focus,button:focus-visible,.btn:focus-within{outline:2px solid var(--accent-2);outline-offset:2px}
+body{padding:16px;font-size:16px}
+#dir{display:block;word-break:break-all;margin-top:2px}
+label.l{display:block;margin:20px 0 6px}
+input,textarea{font-size:17px}textarea{min-height:110px}
+.row{display:flex;gap:8px;margin-top:18px}
+.btn{flex:1;display:block;text-align:center;padding:16px;border:1px solid var(--accent-2);background:rgb(95 251 241/.08);color:var(--accent-2);font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+.go{width:100%;margin-top:12px;border-color:var(--accent);background:rgb(255 110 199/.18);color:var(--text)}
+.go:disabled{border-color:var(--line-strong);background:none;color:var(--quiet)}
+#prev{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}#prev img{height:80px;border:1px solid var(--line-strong)}
+#log div{padding:6px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--mid)}
+#chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}#chips:empty{display:none}
+#chips button{font:inherit;font-size:15px;padding:8px 14px;background:none;border:1px solid var(--line-strong);color:var(--accent-2);cursor:pointer}
+#chips button.on{border-color:var(--accent);background:rgb(255 110 199/.15);color:var(--text)}
 </style></head><body>
-<h2>fotodoku</h2><small id=dir></small>
+<div class=brand>fotodoku<span class=cur></span></div><small id=dir></small>
 <label class=l for=title>Step / title</label>
 <input id=title list=titles autocomplete=off autocapitalize=sentences><datalist id=titles></datalist>
 <div id=chips></div>
@@ -369,28 +385,46 @@ refresh();
 PC_HTML = r"""<!doctype html><html lang=en><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>fotodoku</title>
 <style>
-body{font-family:system-ui,sans-serif;margin:0;background:#f4f4f2;color:#222}
-header{display:flex;gap:24px;align-items:center;padding:16px 24px;background:#fff;border-bottom:1px solid #ddd;flex-wrap:wrap}
-#qr svg{width:170px;height:170px;display:block}
-#url{font-family:monospace;font-size:15px}
-.dir{flex:1;min-width:320px}.dir input{width:100%;box-sizing:border-box;font-size:15px;padding:8px;font-family:monospace}
-.dir button{padding:6px 12px;margin-top:6px}
-#sub{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;max-height:120px;overflow:auto}
-#sub a{background:#eee;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:13px}
-main{padding:8px 24px 40px}
-h2{margin:28px 0 8px;border-bottom:2px solid #ccc;padding-bottom:4px}
-.e{display:flex;gap:14px;background:#fff;border-radius:8px;padding:10px;margin:8px 0}
-.e .n{font-weight:700;font-family:monospace;min-width:40px}
-.e img{height:130px;border-radius:4px;cursor:zoom-in}
-.e .t{white-space:pre-wrap;flex:1}
-.muted{color:#888}
-#big{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center;cursor:zoom-out}
+:root{--bg:#1a0d2e;--bg-dark:rgb(20 9 37/.82);--bg-light:#2d1b4e;--sel:#543a6e;--text:#fef6ff;
+--quiet:#8b9aff;--mid:#d9d1e5;--accent:#ff6ec7;--accent-2:#5ffbf1;--line:#3a2560;--line-strong:#543a6e;
+--font:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--text);font-family:var(--font);line-height:1.6;-webkit-font-smoothing:antialiased;
+background:radial-gradient(ellipse 80% 45% at 15% -5%,rgb(255 110 199/.22),transparent 70%),
+radial-gradient(ellipse 70% 40% at 90% 0%,rgb(95 251 241/.12),transparent 70%),
+radial-gradient(ellipse 90% 50% at 50% 110%,rgb(139 154 255/.14),transparent 70%),var(--bg);background-attachment:fixed}
+::selection{background:var(--sel)}
+.brand{font-weight:700;font-size:1.05rem;color:var(--text)}
+.brand .cur{display:inline-block;width:.55em;height:1.05em;background:var(--accent);vertical-align:-.15em;margin-left:.15em;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}@media (prefers-reduced-motion:reduce){.brand .cur{animation:none}}
+.label,label.l{font-size:.7rem;text-transform:uppercase;letter-spacing:.14em;color:var(--quiet)}
+.muted,small{color:var(--quiet)}
+input,textarea{width:100%;font:inherit;padding:12px;border-radius:0;border:1px solid var(--line-strong);background:var(--bg-dark);color:var(--text)}
+input:focus,textarea:focus,button:focus-visible,.btn:focus-within{outline:2px solid var(--accent-2);outline-offset:2px}
+body{font-size:.95rem}
+header{display:flex;gap:28px;align-items:center;padding:18px 24px;border-bottom:1px solid var(--line);background:rgb(20 9 37/.7);backdrop-filter:blur(8px);flex-wrap:wrap}
+#qr{background:#fef6ff;padding:8px}#qr svg{width:170px;height:170px;display:block}
+#url{font-size:14px;color:var(--accent-2);word-break:break-all}
+.dir{flex:1;min-width:320px}.dir input{font-size:14px;padding:8px;margin-top:4px}
+button{font:inherit;font-size:.8rem;padding:6px 12px;margin-top:8px;background:none;border:1px solid var(--line-strong);color:var(--accent-2);cursor:pointer}
+button:hover{border-color:var(--accent);color:var(--text)}
+#sub{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;max-height:120px;overflow:auto}
+#sub a{border:1px solid var(--line);padding:2px 8px;cursor:pointer;font-size:12px;color:var(--mid)}
+#sub a:hover{border-color:var(--accent);color:var(--text)}
+main{padding:8px 24px 40px;max-width:110rem;margin:0 auto}
+h2{margin:32px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);font-size:1rem;color:var(--accent)}
+h2 small{font-weight:400}
+.e{display:flex;gap:14px;background:var(--bg-dark);border:1px solid var(--line);padding:10px;margin:8px 0}
+.e .n{font-weight:700;min-width:40px;color:var(--accent-2)}
+.e img{height:130px;border:1px solid var(--line-strong);cursor:zoom-in}
+.e .t{white-space:pre-wrap;flex:1;color:var(--mid)}
+#big{position:fixed;inset:0;background:rgb(10 4 20/.92);display:none;align-items:center;justify-content:center;cursor:zoom-out}
 #big img{max-width:95vw;max-height:95vh}
 </style></head><body>
 <header>
  <div id=qr></div>
- <div><b>Connect your phone</b><br><span id=url></span><br><small class=muted>same Wi-Fi, scan the QR code</small></div>
- <div class=dir><b>Folder</b>
+ <div><div class=brand>fotodoku<span class=cur></span></div><span class=label>Connect your phone</span><br><span id=url></span><br><small>same Wi-Fi, scan the QR code</small></div>
+ <div class=dir><span class=label>Folder</span>
   <input id=path><br>
   <button id=use>Use this folder</button> <button id=up>⬆ Parent</button>
   <div id=sub></div>
