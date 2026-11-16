@@ -36,7 +36,9 @@ remembers afterwards which one shows what.
   numbering carries on.
 
 Options: `--ip` sets the address shown in the QR code (if the detected one is wrong),
-`--no-browser` skips opening the overview.
+`--no-browser` skips opening the overview, `--titles "Front,Back,Label"` offers one-tap title
+buttons on the phone and `--title "Front"` pre-fills the title. Without a preset, the phone
+remembers the last title per folder, so a new folder does not start with an old title.
 
 ## fotodrop: just get the photos over
 

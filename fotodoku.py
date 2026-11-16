@@ -175,6 +175,7 @@ class H(BaseHTTPRequestHandler):
             self.send(200, PHONE_HTML, html)
         elif path == "/api/state":
             s = state()
+            s.update(presets=cfg.get("presets", []), title=cfg.get("title", ""))
             if self.local():
                 s.update(url=cfg["url"], qr=cfg["qr"])
             self.send(200, s)
@@ -252,11 +253,16 @@ def main():
     ap.add_argument("--port", type=int, default=8000)
     ap.add_argument("--ip", help="IP address for the QR code (default: detected automatically)")
     ap.add_argument("--no-browser", action="store_true", help="do not open the overview in the browser")
+    ap.add_argument("--title", default="", help="title preset in the phone form")
+    ap.add_argument("--titles", default="",
+                    help="comma-separated titles offered as one-tap buttons on the phone, e.g. 'Front,Back,Label'")
     a = ap.parse_args()
 
     d = Path(a.dir).expanduser().resolve()
     d.mkdir(parents=True, exist_ok=True)
     cfg["dir"] = str(d)
+    cfg["presets"] = [t.strip() for t in a.titles.split(",") if t.strip()]
+    cfg["title"] = a.title.strip() or (cfg["presets"][0] if cfg["presets"] else "")
     cfg["ip"] = a.ip or lan_ip()
     cfg["token"] = secrets.token_urlsafe(6)
     cfg["url"] = f"http://{cfg['ip']}:{a.port}/{cfg['token']}/m"
@@ -291,10 +297,14 @@ textarea{min-height:110px;font-family:inherit}
 .go{background:#2a6;width:100%;margin-top:12px}.go:disabled{background:#444}
 #prev{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}#prev img{height:80px;border-radius:6px}
 #log div{padding:6px 0;border-bottom:1px solid #333;font-size:15px}
+#chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}#chips:empty{display:none}
+#chips button{font-size:16px;padding:10px 14px;border-radius:20px;border:1px solid #357;background:#222;color:#eee}
+#chips button.on{background:#357;color:#fff}
 </style></head><body>
 <h2>fotodoku</h2><small id=dir></small>
 <label class=l for=title>Step / title</label>
 <input id=title list=titles autocomplete=off autocapitalize=sentences><datalist id=titles></datalist>
+<div id=chips></div>
 <small id=next></small>
 <label class=l for=note>Note</label><textarea id=note></textarea>
 <div class=row>
@@ -307,13 +317,23 @@ textarea{min-height:110px;font-family:inherit}
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let files=[];
-try{$('title').value=localStorage.getItem('title')||''}catch(e){}
+let files=[],first=true,key='title';
+// The last title is remembered per folder, so a new folder does not inherit an old title.
+// A preset from the laptop (--title/--titles) wins on page load.
+function mark(){for(const b of $('chips').children)b.classList.toggle('on',b.textContent===$('title').value.trim())}
 async function refresh(){
   const s=await (await fetch('api/state')).json();
   $('dir').textContent=s.dir;
   $('titles').innerHTML=s.titles.map(t=>`<option value="${esc(t.title)}">`).join('');
-  next();
+  $('chips').innerHTML=s.presets.map(t=>`<button type=button>${esc(t)}</button>`).join('');
+  for(const b of $('chips').children)b.onclick=()=>{$('title').value=b.textContent;mark();next()};
+  if(first){
+    first=false;key='title:'+s.dir;
+    let t=s.title;
+    if(!t){try{t=localStorage.getItem(key)||''}catch(e){}}
+    $('title').value=t;
+  }
+  mark();next();
 }
 let tm;
 function next(){clearTimeout(tm);tm=setTimeout(async()=>{
@@ -327,12 +347,12 @@ function add(ev){
   $('prev').innerHTML=files.map(f=>`<img src="${URL.createObjectURL(f)}">`).join('');
   $('go').disabled=!files.length;$('go').textContent=`Upload (${files.length})`;
 }
-$('cam').onchange=add;$('gal').onchange=add;$('title').oninput=next;
+$('cam').onchange=add;$('gal').onchange=add;$('title').oninput=()=>{mark();next()};
 $('go').onclick=async()=>{
   const title=$('title').value.trim(),note=$('note').value;
   if(!title){alert('Title missing');return}
   $('go').disabled=true;
-  try{localStorage.setItem('title',title)}catch(e){}
+  try{localStorage.setItem(key,title)}catch(e){}
   for(const f of files){
     const q=new URLSearchParams({title,note,name:f.name});
     try{
